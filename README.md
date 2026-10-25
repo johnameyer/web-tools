@@ -2,17 +2,20 @@
 
 A collection of small, single-purpose developer tools for the one-off tasks that come up while programming. Each tool does one thing, runs in the browser, and works without an account or a server round-trip.
 
-## Planned tools
+## Tools
 
 | Tool | Description |
 | --- | --- |
-| Timestamp converter | Convert between Unix epoch, ISO 8601, and human-readable dates, with timezone support |
-| URI encode / decode | Percent-encode and decode URI components and full URIs |
-| JSON prettify | Format, minify, and validate JSON |
-| JSON Schema editor | Author and edit JSON Schemas |
-| JSON Schema validator | Validate a JSON document against a schema and show errors |
-| Base64 encode / decode | Encode and decode Base64 (standard and URL-safe) |
-| JWT decoder | Inspect JWT header and payload, and check expiry claims |
+| Timestamp converter | Unix epoch (seconds to nanoseconds), ISO 8601 and free-form dates in any timezone |
+| Cron explainer | Plain-English description of a 5-field cron expression, with its next runs |
+| JWT decoder | Decode header and payload, check expiry, verify HS/RS/PS/ES signatures |
+| Base64 encode / decode | Standard and URL-safe, UTF-8 safe |
+| URI encode / decode | Component and full-URI modes |
+| UUID / ULID | Generate v4, v7 and ULIDs; inspect any ID for its version and timestamp |
+| Hash / HMAC generator | MD5, SHA-1, SHA-256, SHA-384, SHA-512 of text or a file, with optional HMAC |
+| JSON prettify / minify | Format, minify and sort JSON with folding and inline errors |
+| JSON Schema editor | Write a schema with keyword hints and test it against sample data |
+| JSON Schema validator | Validate data against a schema (Draft 2020-12, 2019-09 or draft-07) |
 
 ## Principles
 
@@ -43,7 +46,7 @@ Create `src/tools/<name>/`, keep the logic in pure, tested functions separate fr
 
 ## Contributing
 
-New tool ideas are welcome. Add them to the table above, then open a PR with the implementation.
+New tool ideas are welcome. Add the tool to `src/tools.ts` and the table above, with unit tests for its logic and an end-to-end test in `e2e/`.
 
 ## License
 

@@ -368,6 +368,47 @@ test.describe('Timestamp', () => {
   });
 });
 
+test.describe('Cron', () => {
+  test('explains an expression and lists the next runs', async ({ page }) => {
+    await open(page, 'cron');
+    // The page starts with an example filled in
+    await expect(page.getByText('Every 15 minutes, between 09:00 and 17:45, on Monday through Friday')).toBeVisible();
+    await expect(page.getByText('Next 10 runs')).toBeVisible();
+    await expect(page.getByText('#10', { exact: true })).toBeVisible();
+
+    await page.getByLabel('Cron expression').fill('0 0 13 * 5');
+    await expect(page.getByText('At 00:00, on day 13 of the month, or on Friday')).toBeVisible();
+    await expect(page.getByText('Day of month and day of week')).toBeVisible();
+  });
+
+  test('shows the field breakdown and honors the timezone', async ({ page }) => {
+    await open(page, 'cron');
+    await page.getByLabel('Cron expression').fill('0 9 * * *');
+    await expect(page.getByText('At 09:00', { exact: true })).toBeVisible();
+    await expect(page.getByText('Day of month', { exact: true })).toBeVisible();
+
+    await page.getByRole('combobox', { name: 'Show next runs in' }).fill('UTC');
+    await page.getByRole('option', { name: 'UTC', exact: true }).click();
+    await expect(page.getByText(/T09:00:00\.000Z/).first()).toBeVisible();
+  });
+
+  test('uses an example button and reports errors', async ({ page }) => {
+    await open(page, 'cron');
+    await page.getByRole('button', { name: '@daily' }).click();
+    await expect(page.getByLabel('Cron expression')).toHaveValue('@daily');
+    await expect(page.getByText('At 00:00', { exact: true })).toBeVisible();
+
+    await page.getByLabel('Cron expression').fill('61 * * * *');
+    await expect(page.getByText('Minute: 61 is out of range (0-59)')).toBeVisible();
+  });
+
+  test('says when a schedule never runs', async ({ page }) => {
+    await open(page, 'cron');
+    await page.getByLabel('Cron expression').fill('0 0 31 2 *');
+    await expect(page.getByText('This schedule never runs')).toBeVisible();
+  });
+});
+
 test.describe('JWT', () => {
   // {"alg":"HS256","typ":"JWT"} . {"sub":"1234567890","name":"John Doe","iat":1516239022} signed with "your-256-bit-secret"
   const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';

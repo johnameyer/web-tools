@@ -37,7 +37,7 @@ interface WallTime {
   second: number;
 }
 
-function wallTimeIn(utcMs: number, timeZone: string): WallTime {
+export function wallTimeIn(utcMs: number, timeZone: string): WallTime {
   const values: Record<string, number> = {};
   for (const part of partsFormatter(timeZone).formatToParts(new Date(utcMs))) {
     if (part.type !== 'literal') {
@@ -48,7 +48,7 @@ function wallTimeIn(utcMs: number, timeZone: string): WallTime {
 }
 
 /** Builds a UTC timestamp from fields; Date.UTC would map years 0-99 to 1900-1999. */
-function utcFromFields(year: number, month: number, day: number, hour = 0, minute = 0, second = 0, ms = 0): number {
+export function utcFromFields(year: number, month: number, day: number, hour = 0, minute = 0, second = 0, ms = 0): number {
   const date = new Date(0);
   date.setUTCFullYear(year, month - 1, day);
   date.setUTCHours(hour, minute, second, ms);
@@ -63,7 +63,7 @@ export function offsetMs(utcMs: number, timeZone: string): number {
 }
 
 /** Converts wall-clock fields in `timeZone` to an instant. Skipped times resolve forward; repeated times resolve to the first. */
-function zonedToUtc(naiveUtcMs: number, timeZone: string): number {
+export function zonedToUtc(naiveUtcMs: number, timeZone: string): number {
   const first = naiveUtcMs - offsetMs(naiveUtcMs, timeZone);
   const second = naiveUtcMs - offsetMs(first, timeZone);
   return second;

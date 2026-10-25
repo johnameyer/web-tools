@@ -22,6 +22,12 @@ export const tools: Tool[] = [
     component: load(() => import('./tools/timestamp/TimestampTool'), 'TimestampTool'),
   },
   {
+    path: 'cron',
+    title: 'Cron explainer',
+    description: 'Explain a cron expression in plain English and list its next runs',
+    component: load(() => import('./tools/cron/CronTool'), 'CronTool'),
+  },
+  {
     path: 'jwt',
     title: 'JWT decoder',
     description: 'Decode a JWT, check its expiry and verify its signature',
