@@ -1,0 +1,21 @@
+# Compiled output
+/dist
+*.tsbuildinfo
+
+# Node
+/node_modules
+npm-debug.log*
+yarn-error.log*
+
+# IDEs and editors
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# Test output
+/coverage
+
+# System files
+.DS_Store
+Thumbs.db
