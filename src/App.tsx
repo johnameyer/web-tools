@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import type { ReactElement } from 'react';
 import { HashRouter, Link, Route, Routes, useLocation } from 'react-router-dom';
 
+import { ThemeToggle } from './components/ThemeToggle';
 import { tools } from './tools';
 
 function Home(): ReactElement {
@@ -34,9 +35,12 @@ function Shell(): ReactElement {
       padding="md"
     >
       <AppShell.Header p="md">
-        <Group h="100%">
-          <Burger opened={navOpened} onClick={toggle} hiddenFrom="sm" size="sm" aria-label="Toggle navigation" />
-          <Anchor component={Link} to="/" fw={700} underline="never">web-tools</Anchor>
+        <Group h="100%" justify="space-between">
+          <Group>
+            <Burger opened={navOpened} onClick={toggle} hiddenFrom="sm" size="sm" aria-label="Toggle navigation" />
+            <Anchor component={Link} to="/" fw={700} underline="never">web-tools</Anchor>
+          </Group>
+          <ThemeToggle />
         </Group>
       </AppShell.Header>
       {/* inert keeps the off-screen links out of the tab order and the accessibility tree */}

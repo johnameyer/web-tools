@@ -61,6 +61,46 @@ test.describe('navigation', () => {
   });
 });
 
+test.describe('theme', () => {
+  const scheme = (page: Page) => page.locator('html').getAttribute('data-mantine-color-scheme');
+
+  test('toggles and remembers the choice across reloads', async ({ page }) => {
+    await page.goto('/');
+    expect(await scheme(page)).toBe('light');
+
+    await page.getByRole('button', { name: 'Switch to dark mode' }).click();
+    expect(await scheme(page)).toBe('dark');
+    await expect(page.getByRole('button', { name: 'Switch to light mode' })).toBeVisible();
+
+    await page.reload();
+    expect(await scheme(page)).toBe('dark');
+
+    await page.getByRole('button', { name: 'Switch to light mode' }).click();
+    expect(await scheme(page)).toBe('light');
+  });
+
+  test.describe('with a dark system preference', () => {
+    test.use({ colorScheme: 'dark' });
+
+    test('starts dark and can be switched to light', async ({ page }) => {
+      await page.goto('/');
+      expect(await scheme(page)).toBe('dark');
+      await page.getByRole('button', { name: 'Switch to light mode' }).click();
+      expect(await scheme(page)).toBe('light');
+    });
+  });
+
+  test('code editors follow the theme', async ({ page }) => {
+    await open(page, 'json-format');
+    const editor = page.locator('.cm-editor').first();
+    await expect(editor).toBeVisible();
+    const lightBackground = await editor.evaluate(el => getComputedStyle(el).backgroundColor);
+
+    await page.getByRole('button', { name: 'Switch to dark mode' }).click();
+    await expect.poll(() => editor.evaluate(el => getComputedStyle(el).backgroundColor)).not.toBe(lightBackground);
+  });
+});
+
 test.describe('every tool', () => {
   for (const tool of tools) {
     test(`${tool.title} renders without errors`, async ({ page }) => {
@@ -298,6 +338,14 @@ test.describe('JWT', () => {
 
     await page.getByLabel('Secret', { exact: true }).fill('your-256-bit-secret');
     await expect(page.getByText('Signature verified')).toBeVisible();
+  });
+
+  test('blames a malformed signature rather than the key', async ({ page }) => {
+    await open(page, 'jwt');
+    await page.getByLabel('Token').fill('eyJhbGciOiJIUzI1NiJ9.e30.x');
+    await page.getByLabel('Secret', { exact: true }).fill('anything');
+    await expect(page.getByText("The token's signature is not valid Base64")).toBeVisible();
+    await expect(page.getByText('atob')).toHaveCount(0);
   });
 
   test('explains a malformed token', async ({ page }) => {

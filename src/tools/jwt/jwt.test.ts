@@ -138,12 +138,24 @@ describe('verifyJwt', () => {
     }
   });
 
+  it('blames the signature, not the key, when the signature is malformed', async () => {
+    const malformed = decodeJwt(`${b64url('{"alg":"HS256"}')}.${b64url('{}')}.x`);
+    expect(await verifyJwt(malformed, 'secret')).toEqual({ ok: false, message: 'The token\'s signature is not valid Base64' });
+  });
+
+  it('explains a secret or key that is not valid Base64', async () => {
+    const jwt = decodeJwt(hs256({}, 's'));
+    expect(await verifyJwt(jwt, '***', true)).toMatchObject({ ok: false, message: expect.stringContaining('The secret is not valid Base64') });
+    const rsa = decodeJwt(`${b64url('{"alg":"RS256"}')}.${b64url('{}')}.AAAA`);
+    expect(await verifyJwt(rsa, '***')).toMatchObject({ ok: false, message: expect.stringContaining('The key is not valid Base64') });
+  });
+
   it('explains unusable input', async () => {
     const jwt = decodeJwt(hs256({}, 's'));
     expect(await verifyJwt(jwt, '')).toMatchObject({ ok: false, message: expect.stringContaining('Enter a key') });
     expect(await verifyJwt(decodeJwt(`${b64url('{"alg":"none"}')}.${b64url('{}')}.`), 'x')).toMatchObject({ ok: false, message: expect.stringContaining('unsigned') });
     expect(await verifyJwt(decodeJwt(`${b64url('{"alg":"EdDSA"}')}.${b64url('{}')}.x`), 'x')).toMatchObject({ ok: false, message: expect.stringContaining('does not support') });
-    const rsa = decodeJwt(`${b64url('{"alg":"RS256"}')}.${b64url('{}')}.x`);
+    const rsa = decodeJwt(`${b64url('{"alg":"RS256"}')}.${b64url('{}')}.AAAA`);
     expect(await verifyJwt(rsa, '-----BEGIN PRIVATE KEY-----\nAAAA\n-----END PRIVATE KEY-----')).toMatchObject({ ok: false, message: expect.stringContaining('private key') });
     expect(await verifyJwt(rsa, 'not a key')).toMatchObject({ ok: false });
   });

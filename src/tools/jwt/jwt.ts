@@ -123,17 +123,23 @@ export function keyKindFor(alg: unknown): KeyKind {
   return ALGORITHMS[alg].family === 'HMAC' ? 'secret' : 'public-key';
 }
 
-function base64ToBytes(text: string): Uint8Array {
+/** Accepts standard or URL-safe Base64; `what` names the input in the error message. */
+function base64ToBytes(text: string, what: string): Uint8Array {
   const normalized = text.replace(/\s+/g, '').replace(/-/g, '+')
     .replace(/_/g, '/');
-  const binary = atob(normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '='));
+  let binary: string;
+  try {
+    binary = atob(normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '='));
+  } catch {
+    throw new Error(`${what} is not valid Base64`);
+  }
   return Uint8Array.from(binary, char => char.charCodeAt(0));
 }
 
 async function importVerificationKey(spec: AlgorithmSpec, keyInput: string, secretIsBase64: boolean): Promise<CryptoKey> {
   const text = keyInput.trim();
   if (spec.family === 'HMAC') {
-    const bytes = secretIsBase64 ? base64ToBytes(text) : new TextEncoder().encode(keyInput);
+    const bytes = secretIsBase64 ? base64ToBytes(text, 'The secret') : new TextEncoder().encode(keyInput);
     return crypto.subtle.importKey('raw', bytes as BufferSource, { name: 'HMAC', hash: spec.hash }, false, [ 'verify' ]);
   }
 
@@ -154,7 +160,7 @@ async function importVerificationKey(spec: AlgorithmSpec, keyInput: string, secr
         : `Unsupported PEM type "${pem[1]}". Use a "PUBLIC KEY" (SPKI) block or a JWK`,
     );
   }
-  const der = base64ToBytes(pem ? pem[2] : text);
+  const der = base64ToBytes(pem ? pem[2] : text, 'The key');
   return crypto.subtle.importKey('spki', der as BufferSource, algorithm, false, [ 'verify' ]);
 }
 
@@ -174,6 +180,13 @@ export async function verifyJwt(jwt: DecodedJwt, keyInput: string, secretIsBase6
     return { ok: false, message: 'Enter a key to verify the signature' };
   }
 
+  let signature: Uint8Array;
+  try {
+    signature = base64ToBytes(jwt.signature, 'The token\'s signature');
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : 'The signature could not be decoded' };
+  }
+
   const spec = ALGORITHMS[alg];
   try {
     const key = await importVerificationKey(spec, keyInput, secretIsBase64);
@@ -183,7 +196,7 @@ export async function verifyJwt(jwt: DecodedJwt, keyInput: string, secretIsBase6
     const valid = await crypto.subtle.verify(
       verifyAlgorithm,
       key,
-      base64ToBytes(jwt.signature) as BufferSource,
+      signature as BufferSource,
       new TextEncoder().encode(jwt.signingInput),
     );
     return { ok: true, valid };
