@@ -109,6 +109,40 @@ test.describe('URI', () => {
   });
 });
 
+test.describe('Hash', () => {
+  const ABC_MD5 = '900150983cd24fb0d6963f7d28e17f72';
+  const ABC_SHA256 = 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad';
+
+  test('hashes text and switches output format', async ({ page }) => {
+    await open(page, 'hash');
+    await page.getByRole('textbox', { name: 'Text' }).fill('abc');
+    await expect(page.getByText(ABC_MD5)).toBeVisible();
+    await expect(page.getByText(ABC_SHA256)).toBeVisible();
+
+    await page.getByText('HEX', { exact: true }).click();
+    await expect(page.getByText(ABC_MD5.toUpperCase())).toBeVisible();
+    await page.getByText('Base64', { exact: true }).click();
+    await expect(page.getByText('kAFQmDzST7DWlj99KOF/cg==')).toBeVisible();
+  });
+
+  test('computes an HMAC with a key', async ({ page }) => {
+    await open(page, 'hash');
+    await page.getByRole('textbox', { name: 'Text' }).fill('what do ya want for nothing?');
+    await page.getByLabel('HMAC').check();
+    await page.getByLabel('Secret key').fill('Jefe');
+    await expect(page.getByText('5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843')).toBeVisible();
+    await expect(page.getByText('HMAC-SHA-256')).toBeVisible();
+  });
+
+  test('hashes a chosen file', async ({ page }) => {
+    await open(page, 'hash');
+    await page.getByText('File', { exact: true }).click();
+    await page.locator('input[type=file]').setInputFiles({ name: 'abc.txt', mimeType: 'text/plain', buffer: Buffer.from('abc') });
+    await expect(page.getByText(ABC_MD5)).toBeVisible();
+    await expect(page.getByText('abc.txt · 3 B')).toBeVisible();
+  });
+});
+
 test.describe('JSON prettify', () => {
   test('formats, minifies and flags invalid JSON', async ({ page }) => {
     await open(page, 'json-format');
