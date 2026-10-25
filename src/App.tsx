@@ -1,11 +1,12 @@
-import { AppShell, Anchor, Container, Loader, Stack, Text, Title } from '@mantine/core';
+import { AppShell, Anchor, Burger, Container, Group, Loader, NavLink, Stack, Text, Title } from '@mantine/core';
+import { useDisclosure, useMediaQuery } from '@mantine/hooks';
 import { Suspense } from 'react';
 import type { ReactElement } from 'react';
-import { HashRouter, Link, Route, Routes } from 'react-router-dom';
+import { HashRouter, Link, Route, Routes, useLocation } from 'react-router-dom';
 
 import { tools } from './tools';
 
-function Home() {
+function Home(): ReactElement {
   return (
     <Stack>
       <Title order={2}>Tools</Title>
@@ -20,27 +21,61 @@ function Home() {
   );
 }
 
+function Shell(): ReactElement {
+  const [ navOpened, { toggle, close }] = useDisclosure(false);
+  const { pathname } = useLocation();
+  // Matches the navbar breakpoint ('sm' = 48em); below it the navbar slides off-screen when closed
+  const isMobile = useMediaQuery('(max-width: 47.99em)', false, { getInitialValueInEffect: false });
+
+  return (
+    <AppShell
+      header={{ height: 56 }}
+      navbar={{ width: 260, breakpoint: 'sm', collapsed: { mobile: !navOpened }}}
+      padding="md"
+    >
+      <AppShell.Header p="md">
+        <Group h="100%">
+          <Burger opened={navOpened} onClick={toggle} hiddenFrom="sm" size="sm" aria-label="Toggle navigation" />
+          <Anchor component={Link} to="/" fw={700} underline="never">web-tools</Anchor>
+        </Group>
+      </AppShell.Header>
+      {/* inert keeps the off-screen links out of the tab order and the accessibility tree */}
+      <AppShell.Navbar p="xs" aria-label="Tools" inert={isMobile && !navOpened}>
+        <AppShell.Section grow style={{ overflowY: 'auto' }}>
+          <NavLink component={Link} to="/" label="Home" active={pathname === '/'} onClick={close} />
+          {tools.map(tool => (
+            <NavLink
+              key={tool.path}
+              component={Link}
+              to={tool.path}
+              label={tool.title}
+              active={pathname === `/${tool.path}`}
+              onClick={close}
+            />
+          ))}
+        </AppShell.Section>
+      </AppShell.Navbar>
+      <AppShell.Main>
+        <Container size="lg">
+          <Suspense fallback={<Loader aria-label="Loading tool" />}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              {tools.map(tool => (
+                <Route key={tool.path} path={tool.path} element={<tool.component />} />
+              ))}
+            </Routes>
+          </Suspense>
+        </Container>
+      </AppShell.Main>
+    </AppShell>
+  );
+}
+
 // HashRouter so deep links work on static hosting without a 404 fallback
 export function App(): ReactElement {
   return (
     <HashRouter>
-      <AppShell header={{ height: 56 }} padding="md">
-        <AppShell.Header p="md">
-          <Anchor component={Link} to="/" fw={700} underline="never">web-tools</Anchor>
-        </AppShell.Header>
-        <AppShell.Main>
-          <Container size="md">
-            <Suspense fallback={<Loader aria-label="Loading tool" />}>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                {tools.map(tool => (
-                  <Route key={tool.path} path={tool.path} element={<tool.component />} />
-                ))}
-              </Routes>
-            </Suspense>
-          </Container>
-        </AppShell.Main>
-      </AppShell>
+      <Shell />
     </HashRouter>
   );
 }

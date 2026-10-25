@@ -20,14 +20,48 @@ function editorText(page: Page, label: string) {
   return page.getByLabel(label, { exact: true }).locator('.cm-content');
 }
 
-test.describe('every tool', () => {
-  test('is listed on the home page', async ({ page }) => {
+test.describe('navigation', () => {
+  test('home page lists every tool', async ({ page }) => {
     await page.goto('/');
     for (const tool of tools) {
-      await expect(page.getByRole('link', { name: tool.title })).toBeVisible();
+      await expect(page.locator('main').getByRole('link', { name: tool.title })).toBeVisible();
     }
   });
 
+  test('side nav links to every tool and marks the current one', async ({ page }) => {
+    await page.goto('/');
+    const nav = page.getByRole('navigation', { name: 'Tools' });
+    for (const tool of tools) {
+      await expect(nav.getByRole('link', { name: tool.title })).toBeVisible();
+    }
+    await nav.getByRole('link', { name: 'JWT decoder' }).click();
+    await expect(page).toHaveURL(/#\/jwt$/);
+    await expect(nav.getByRole('link', { name: 'JWT decoder' })).toHaveAttribute('data-active', 'true');
+    await expect(nav.getByRole('link', { name: 'Home' })).not.toHaveAttribute('data-active', 'true');
+  });
+
+  test('collapses behind a burger on narrow screens', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 700 });
+    await page.goto('/');
+    const nav = page.getByRole('navigation', { name: 'Tools' });
+    // Slid off-screen, and removed from the tab order and accessibility tree
+    await expect(nav).not.toBeInViewport();
+    await expect(nav).toHaveAttribute('inert', '');
+    for (let i = 0; i < 4; i++) {
+      await page.keyboard.press('Tab');
+      expect(await nav.evaluate(el => el.contains(document.activeElement))).toBe(false);
+    }
+
+    await page.getByRole('button', { name: 'Toggle navigation' }).click();
+    await expect(nav).toBeInViewport();
+    await expect(nav).not.toHaveAttribute('inert');
+    await nav.getByRole('link', { name: 'Base64 encode / decode' }).click();
+    await expect(page).toHaveURL(/#\/base64$/);
+    await expect(nav).not.toBeInViewport();
+  });
+});
+
+test.describe('every tool', () => {
   for (const tool of tools) {
     test(`${tool.title} renders without errors`, async ({ page }) => {
       const errors: string[] = [];
@@ -39,7 +73,8 @@ test.describe('every tool', () => {
       });
 
       await page.goto('/');
-      await page.getByRole('link', { name: tool.title }).click();
+      await page.getByRole('navigation', { name: 'Tools' }).getByRole('link', { name: tool.title })
+        .click();
       await expect(page).toHaveURL(new RegExp(`#/${tool.path}$`));
       await expect(page.getByRole('progressbar')).toHaveCount(0);
       await expect(page.locator('main')).not.toBeEmpty();
