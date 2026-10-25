@@ -33,4 +33,10 @@ export const tools: Tool[] = [
     description: 'Format, minify, sort, fold and validate JSON',
     component: load(() => import('./tools/json-format/JsonFormatTool'), 'JsonFormatTool'),
   },
+  {
+    path: 'json-schema-validator',
+    title: 'JSON Schema validator',
+    description: 'Validate JSON data against a JSON Schema',
+    component: load(() => import('./tools/json-schema-validator/JsonSchemaValidatorTool'), 'JsonSchemaValidatorTool'),
+  },
 ];
