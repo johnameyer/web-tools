@@ -122,4 +122,11 @@ describe('listTimeZones', () => {
     expect(zones).toContain('America/New_York');
     expect(zones.filter(zone => zone === 'UTC')).toHaveLength(1);
   });
+
+  it('includes modern names even when the browser only lists the old spelling', () => {
+    const zones = listTimeZones();
+    expect(zones).toContain('Asia/Kolkata');
+    expect(zones).toContain('Europe/Kyiv');
+    expect(new Set(zones).size).toBe(zones.length);
+  });
 });

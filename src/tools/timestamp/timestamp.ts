@@ -188,9 +188,32 @@ export function localTimeZone(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone;
 }
 
+// Intl.supportedValuesOf lists canonical IANA names, which are sometimes the old spellings
+// (Asia/Calcutta, Europe/Kiev), so search for the modern names people actually type would miss.
+const MODERN_NAMES = [
+  'America/Argentina/Buenos_Aires',
+  'Asia/Ho_Chi_Minh',
+  'Asia/Kathmandu',
+  'Asia/Kolkata',
+  'Asia/Yangon',
+  'Atlantic/Faroe',
+  'Europe/Kyiv',
+  'Pacific/Chuuk',
+];
+
+function isSupportedTimeZone(timeZone: string): boolean {
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function listTimeZones(): string[] {
-  const zones = Intl.supportedValuesOf('timeZone').filter(zone => zone !== 'UTC');
-  return [ 'UTC', ...zones ];
+  const listed = Intl.supportedValuesOf('timeZone').filter(zone => zone !== 'UTC');
+  const extra = MODERN_NAMES.filter(name => !listed.includes(name) && isSupportedTimeZone(name));
+  return [ 'UTC', ...[ ...listed, ...extra ].sort() ];
 }
 
 export interface OutputRow {
