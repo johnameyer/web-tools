@@ -33,6 +33,7 @@ pnpm install
 pnpm dev        # start the dev server
 pnpm lint       # lint and auto-fix
 pnpm test       # run unit tests
+pnpm test:e2e   # run browser tests (first: pnpm exec playwright install chromium)
 pnpm build      # typecheck and build to dist/
 ```
 

@@ -8,5 +8,7 @@ export default defineConfig({
   plugins: [ react() ],
   test: {
     environment: 'jsdom',
+    // e2e/ belongs to Playwright
+    include: [ 'src/**/*.test.{ts,tsx}' ],
   },
 });
