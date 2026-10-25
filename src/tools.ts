@@ -16,6 +16,12 @@ function load(importer: () => Promise<Record<string, ComponentType>>, name: stri
 // Register new tools here; the home page and router are generated from this list.
 export const tools: Tool[] = [
   {
+    path: 'timestamp',
+    title: 'Timestamp converter',
+    description: 'Convert between Unix epoch, ISO 8601 and human-readable dates in any timezone',
+    component: load(() => import('./tools/timestamp/TimestampTool'), 'TimestampTool'),
+  },
+  {
     path: 'base64',
     title: 'Base64 encode / decode',
     description: 'Encode and decode Base64, standard or URL-safe',
