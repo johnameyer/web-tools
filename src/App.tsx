@@ -1,4 +1,5 @@
-import { AppShell, Anchor, Container, Stack, Text, Title } from '@mantine/core';
+import { AppShell, Anchor, Container, Loader, Stack, Text, Title } from '@mantine/core';
+import { Suspense } from 'react';
 import type { ReactElement } from 'react';
 import { HashRouter, Link, Route, Routes } from 'react-router-dom';
 
@@ -29,12 +30,14 @@ export function App(): ReactElement {
         </AppShell.Header>
         <AppShell.Main>
           <Container size="md">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              {tools.map(tool => (
-                <Route key={tool.path} path={tool.path} element={<tool.component />} />
-              ))}
-            </Routes>
+            <Suspense fallback={<Loader aria-label="Loading tool" />}>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                {tools.map(tool => (
+                  <Route key={tool.path} path={tool.path} element={<tool.component />} />
+                ))}
+              </Routes>
+            </Suspense>
           </Container>
         </AppShell.Main>
       </AppShell>
