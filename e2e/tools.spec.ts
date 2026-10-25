@@ -109,6 +109,61 @@ test.describe('URI', () => {
   });
 });
 
+test.describe('UUID / ULID', () => {
+  const lines = async (page: Page) => (await page.getByLabel('Generated').inputValue()).split('\n');
+
+  test('generates the chosen type and count', async ({ page }) => {
+    await open(page, 'ids');
+    expect(await lines(page)).toHaveLength(5);
+    for (const id of await lines(page)) {
+      expect(id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    }
+
+    await page.getByLabel('Count').fill('3');
+    expect(await lines(page)).toHaveLength(3);
+
+    await page.getByRole('combobox', { name: 'Type' }).click();
+    await page.getByRole('option', { name: 'ULID (time-ordered)' }).click();
+    for (const id of await lines(page)) {
+      expect(id).toMatch(/^[0-9A-HJKMNP-TV-Z]{26}$/);
+    }
+    // Sorted output is the point of ULIDs
+    expect(await lines(page)).toEqual([ ...(await lines(page)) ].sort());
+  });
+
+  test('Generate produces fresh values and the format switches apply', async ({ page }) => {
+    await open(page, 'ids');
+    const before = await page.getByLabel('Generated').inputValue();
+    await page.getByRole('button', { name: 'Generate' }).click();
+    expect(await page.getByLabel('Generated').inputValue()).not.toBe(before);
+
+    await page.getByLabel('Hyphens').uncheck();
+    await page.getByLabel('Uppercase').check();
+    for (const id of await lines(page)) {
+      expect(id).toMatch(/^[0-9A-F]{32}$/);
+    }
+  });
+
+  test('inspects a UUIDv7 and converts it to a ULID', async ({ page }) => {
+    await open(page, 'ids');
+    await page.getByRole('tab', { name: 'Inspect' }).click();
+    await page.getByLabel('UUID or ULID').fill('017F22E2-79B0-7CC3-98C4-DC0C0C07398F');
+    await expect(page.getByText('UUID version 7 (time-ordered)')).toBeVisible();
+    await expect(page.getByText('2022-02-22T19:22:22.000Z')).toBeVisible();
+    await expect(page.getByText('017f22e2-79b0-7cc3-98c4-dc0c0c07398f', { exact: true }).first()).toBeVisible();
+  });
+
+  test('inspects a ULID and rejects garbage', async ({ page }) => {
+    await open(page, 'ids');
+    await page.getByRole('tab', { name: 'Inspect' }).click();
+    await page.getByLabel('UUID or ULID').fill('01ARYZ6S41TSV4RRFFQ69G5FAV');
+    await expect(page.getByText('1469918176385')).toBeVisible();
+
+    await page.getByLabel('UUID or ULID').fill('hello');
+    await expect(page.getByText('Not a UUID')).toBeVisible();
+  });
+});
+
 test.describe('Hash', () => {
   const ABC_MD5 = '900150983cd24fb0d6963f7d28e17f72';
   const ABC_SHA256 = 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad';

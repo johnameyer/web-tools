@@ -40,6 +40,12 @@ export const tools: Tool[] = [
     component: load(() => import('./tools/uri/UriTool'), 'UriTool'),
   },
   {
+    path: 'ids',
+    title: 'UUID / ULID',
+    description: 'Generate UUID v4, v7 and ULIDs, or inspect an ID to read its version and timestamp',
+    component: load(() => import('./tools/ids/IdTool'), 'IdTool'),
+  },
+  {
     path: 'hash',
     title: 'Hash / HMAC generator',
     description: 'MD5, SHA-1, SHA-256, SHA-384 and SHA-512 of text or a file, with optional HMAC',
