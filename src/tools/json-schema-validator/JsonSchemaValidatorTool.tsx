@@ -1,8 +1,9 @@
-import { Alert, Code, List, Select, SimpleGrid, Stack, Text } from '@mantine/core';
+import { Select, SimpleGrid, Stack } from '@mantine/core';
 import { useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
 
 import { LazyCodeEditor } from '../../components/LazyCodeEditor';
+import { ValidationResultView } from '../../components/ValidationResultView';
 
 import { validateAgainstSchema } from './validate';
 import type { Draft } from './validate';
@@ -37,19 +38,7 @@ export function JsonSchemaValidatorTool(): ReactElement {
         <LazyCodeEditor label="Schema" value={schema} onChange={setSchema} lint />
         <LazyCodeEditor label="Data" value={data} onChange={setData} lint />
       </SimpleGrid>
-      {result?.status === 'valid' && <Alert color="green" title="Valid">The data matches the schema.</Alert>}
-      {result?.status === 'error' && <Alert color="red" title={`Invalid ${result.source}`}>{result.message}</Alert>}
-      {result?.status === 'invalid' && (
-        <Alert color="red" title={`${result.issues.length} validation ${result.issues.length === 1 ? 'error' : 'errors'}`}>
-          <List spacing="xs">
-            {result.issues.map((issue, index) => (
-              <List.Item key={index}>
-                <Code>{issue.path || '(root)'}</Code> <Text span>{issue.message}</Text>
-              </List.Item>
-            ))}
-          </List>
-        </Alert>
-      )}
+      <ValidationResultView result={result} />
     </Stack>
   );
 }

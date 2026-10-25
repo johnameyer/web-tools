@@ -34,6 +34,12 @@ export const tools: Tool[] = [
     component: load(() => import('./tools/json-format/JsonFormatTool'), 'JsonFormatTool'),
   },
   {
+    path: 'json-schema-editor',
+    title: 'JSON Schema editor',
+    description: 'Write a JSON Schema with keyword hints and test it against sample data',
+    component: load(() => import('./tools/json-schema-editor/JsonSchemaEditorTool'), 'JsonSchemaEditorTool'),
+  },
+  {
     path: 'json-schema-validator',
     title: 'JSON Schema validator',
     description: 'Validate JSON data against a JSON Schema',
