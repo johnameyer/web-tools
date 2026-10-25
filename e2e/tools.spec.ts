@@ -101,6 +101,37 @@ test.describe('theme', () => {
   });
 });
 
+test.describe('phone layout', () => {
+  test.use({ viewport: { width: 375, height: 800 }});
+
+  for (const tool of tools) {
+    test(`${tool.title} does not scroll sideways`, async ({ page }) => {
+      await open(page, tool.path);
+      await expect(page.getByRole('progressbar')).toHaveCount(0);
+      const { scroll, client } = await page.evaluate(() => ({
+        scroll: document.documentElement.scrollWidth,
+        client: document.documentElement.clientWidth,
+      }));
+      expect(scroll).toBeLessThanOrEqual(client);
+    });
+  }
+
+  test('result values keep most of the width instead of being squeezed', async ({ page }) => {
+    await open(page, 'hash');
+    await page.getByRole('textbox', { name: 'Text' }).fill('abc');
+    const value = page.getByText('ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
+    await expect(value).toBeVisible();
+    // A hash is 64 characters; squeezed into a narrow column it would wrap into slivers
+    expect((await value.boundingBox())!.width).toBeGreaterThan(250);
+
+    await open(page, 'timestamp');
+    await page.getByLabel('Timestamp').fill('1700000000');
+    const iso = page.getByText('2023-11-14T22:13:20.000Z', { exact: true });
+    await expect(iso).toBeVisible();
+    expect((await iso.boundingBox())!.width).toBeGreaterThan(250);
+  });
+});
+
 test.describe('every tool', () => {
   for (const tool of tools) {
     test(`${tool.title} renders without errors`, async ({ page }) => {
@@ -235,6 +266,20 @@ test.describe('Hash', () => {
     await page.locator('input[type=file]').setInputFiles({ name: 'abc.txt', mimeType: 'text/plain', buffer: Buffer.from('abc') });
     await expect(page.getByText(ABC_MD5)).toBeVisible();
     await expect(page.getByText('abc.txt · 3 B')).toBeVisible();
+  });
+});
+
+test.describe('JSON editors', () => {
+  test('an empty editor is not flagged as an error', async ({ page }) => {
+    await open(page, 'json-schema-validator');
+    await expect(editorText(page, 'Schema')).toBeVisible();
+    // Give the linter time to run before asserting nothing was reported
+    await page.waitForTimeout(1000);
+    await expect(page.locator('.cm-lintRange-error, .cm-lint-marker-error')).toHaveCount(0);
+
+    // The editor auto-closes brackets, so type something that is still invalid afterwards
+    await fillEditor(page, 'Schema', '{"a": }');
+    await expect(page.locator('.cm-lint-marker-error').first()).toBeVisible();
   });
 });
 

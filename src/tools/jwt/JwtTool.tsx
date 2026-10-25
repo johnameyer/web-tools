@@ -1,7 +1,9 @@
-import { Alert, Badge, Button, Code, CopyButton, Group, Paper, SimpleGrid, Stack, Switch, Table, Text, Textarea, Title } from '@mantine/core';
+import { Alert, Badge, Button, Code, CopyButton, Group, Paper, SimpleGrid, Stack, Switch, Text, Textarea, Title } from '@mantine/core';
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
 
+import { ResultList } from '../../components/ResultList';
+import type { ResultRow } from '../../components/ResultList';
 import { formatIso, formatRelative } from '../timestamp/timestamp';
 
 import { decodeJwt, keyKindFor, timeClaims, tokenStatus, verifyJwt } from './jwt';
@@ -128,6 +130,17 @@ export function JwtTool(): ReactElement {
   const status = jwt ? STATUS_BADGES[tokenStatus(jwt.payload, now)] : undefined;
   const otherClaims = jwt ? Object.keys(jwt.payload).filter(name => name in CLAIM_DESCRIPTIONS && !claims.some(c => c.name === name)) : [];
 
+  const claimRows: ResultRow[] = jwt
+    ? [
+      ...claims.map(claim => ({
+        label: `${CLAIM_DESCRIPTIONS[claim.name]} (${claim.name})`,
+        value: formatIso(claim.date, 'UTC'),
+        note: formatRelative(claim.date, now),
+      })),
+      ...otherClaims.map(name => ({ label: `${CLAIM_DESCRIPTIONS[name]} (${name})`, value: JSON.stringify(jwt.payload[name]) })),
+    ]
+    : [];
+
   return (
     <Stack>
       <Textarea
@@ -156,27 +169,7 @@ export function JwtTool(): ReactElement {
             <JsonBlock title="Header" value={jwt.header} />
             <JsonBlock title="Payload" value={jwt.payload} />
           </SimpleGrid>
-          {(claims.length > 0 || otherClaims.length > 0) && (
-            <Table withTableBorder>
-              <Table.Tbody>
-                {claims.map(claim => (
-                  <Table.Tr key={claim.name}>
-                    <Table.Th scope="row" w={200}>{CLAIM_DESCRIPTIONS[claim.name]} <Code>{claim.name}</Code></Table.Th>
-                    <Table.Td>
-                      <Text ff="monospace" size="sm">{formatIso(claim.date, 'UTC')}</Text>
-                      <Text size="sm" c="dimmed">{formatRelative(claim.date, now)}</Text>
-                    </Table.Td>
-                  </Table.Tr>
-                ))}
-                {otherClaims.map(name => (
-                  <Table.Tr key={name}>
-                    <Table.Th scope="row" w={200}>{CLAIM_DESCRIPTIONS[name]} <Code>{name}</Code></Table.Th>
-                    <Table.Td ff="monospace">{JSON.stringify(jwt.payload[name])}</Table.Td>
-                  </Table.Tr>
-                ))}
-              </Table.Tbody>
-            </Table>
-          )}
+          {claimRows.length > 0 && <ResultList rows={claimRows} />}
           <SignatureSection jwt={jwt} key={jwt.signingInput} />
         </>
       )}

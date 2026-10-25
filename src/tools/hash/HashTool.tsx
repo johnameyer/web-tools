@@ -1,6 +1,8 @@
-import { Alert, Button, CopyButton, FileInput, Group, SegmentedControl, Stack, Switch, Table, Text, Textarea, TextInput } from '@mantine/core';
+import { Alert, FileInput, Group, SegmentedControl, Stack, Switch, Text, Textarea, TextInput } from '@mantine/core';
 import { useEffect, useState } from 'react';
 import type { ReactElement } from 'react';
+
+import { ResultList } from '../../components/ResultList';
 
 import { ALGORITHMS, encodeBytes, hashAll } from './hash';
 import type { HashResults, OutputFormat } from './hash';
@@ -59,6 +61,12 @@ export function HashTool(): ReactElement {
   }, [ hasInput, mode, text, file, useHmac, hmacKey, requestId ]);
 
   const current = hasInput && computed?.id === requestId ? computed : undefined;
+  const rows = current?.results
+    ? ALGORITHMS.map(algorithm => ({
+      label: useHmac ? `HMAC-${algorithm}` : algorithm,
+      value: encodeBytes(current.results![algorithm], format),
+    }))
+    : [];
 
   return (
     <Stack>
@@ -98,27 +106,7 @@ export function HashTool(): ReactElement {
       </Group>
       {current?.error && <Alert color="red" title="Can't hash that">{current.error}</Alert>}
       {current?.results && (
-        <Table withTableBorder>
-          <Table.Tbody>
-            {ALGORITHMS.map(algorithm => {
-              const value = encodeBytes(current.results![algorithm], format);
-              const label = useHmac ? `HMAC-${algorithm}` : algorithm;
-              return (
-                <Table.Tr key={algorithm}>
-                  <Table.Th scope="row" w={150}>{label}</Table.Th>
-                  <Table.Td style={{ fontFamily: 'var(--mantine-font-family-monospace)', wordBreak: 'break-all' }}>{value}</Table.Td>
-                  <Table.Td w={90}>
-                    <CopyButton value={value}>
-                      {({ copied, copy }) => (
-                        <Button size="compact-sm" variant="subtle" onClick={copy} aria-label={`Copy ${label}`}>{copied ? 'Copied' : 'Copy'}</Button>
-                      )}
-                    </CopyButton>
-                  </Table.Td>
-                </Table.Tr>
-              );
-            })}
-          </Table.Tbody>
-        </Table>
+        <ResultList rows={rows} />
       )}
       <Text size="sm" c="dimmed">MD5 and SHA-1 are broken for security purposes; they are fine for checksums.</Text>
     </Stack>

@@ -1,8 +1,9 @@
 import { json, jsonParseLinter } from '@codemirror/lang-json';
 import { linter, lintGutter } from '@codemirror/lint';
+import type { Diagnostic } from '@codemirror/lint';
 import type { Extension } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { Button, Group, Input, Stack, useComputedColorScheme } from '@mantine/core';
+import { Box, Button, Group, Input, Stack, useComputedColorScheme } from '@mantine/core';
 import CodeMirror from '@uiw/react-codemirror';
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
@@ -22,6 +23,13 @@ export interface CodeEditorProps {
   foldControls?: boolean;
   minHeight?: string;
 }
+
+type LintSource = (view: EditorView) => readonly Diagnostic[];
+
+const parseLinter = jsonParseLinter();
+
+/** An empty editor is not an error, so only lint once there is something to parse. */
+const lintUnlessBlank: LintSource = view => (view.state.doc.toString().trim() === '' ? [] : parseLinter(view));
 
 // Default export so it can be lazy-loaded; use LazyCodeEditor from other modules.
 export default function CodeEditor({ label, value, onChange, readOnly, lint = false, schema, foldControls = false, minHeight = '240px' }: CodeEditorProps): ReactElement {
@@ -49,7 +57,7 @@ export default function CodeEditor({ label, value, onChange, readOnly, lint = fa
   const extensions = useMemo(() => {
     const result: Extension[] = [ json() ];
     if (lint) {
-      result.push(linter(jsonParseLinter()), lintGutter());
+      result.push(linter(lintUnlessBlank), lintGutter());
     }
     if (schema && schemaExtension) {
       result.push(schemaExtension);
@@ -72,22 +80,24 @@ export default function CodeEditor({ label, value, onChange, readOnly, lint = fa
           </Group>
         )}
       </Group>
-      <CodeMirror
-        id={id}
-        value={value}
-        onChange={onChange}
-        onCreateEditor={view => {
-          viewRef.current = view;
-        }}
-        readOnly={readOnly}
-        editable={!readOnly}
-        theme={colorScheme}
-        minHeight={minHeight}
-        maxHeight="600px"
-        extensions={extensions}
-        basicSetup={{ foldGutter: true, highlightActiveLine: !readOnly }}
-        aria-label={label}
-      />
+      <Box style={{ border: '1px solid var(--mantine-color-default-border)', borderRadius: 'var(--mantine-radius-default)', overflow: 'hidden' }}>
+        <CodeMirror
+          id={id}
+          value={value}
+          onChange={onChange}
+          onCreateEditor={view => {
+            viewRef.current = view;
+          }}
+          readOnly={readOnly}
+          editable={!readOnly}
+          theme={colorScheme}
+          minHeight={minHeight}
+          maxHeight="600px"
+          extensions={extensions}
+          basicSetup={{ foldGutter: true, highlightActiveLine: !readOnly }}
+          aria-label={label}
+        />
+      </Box>
     </Stack>
   );
 }

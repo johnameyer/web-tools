@@ -1,6 +1,8 @@
-import { Alert, Badge, Button, CopyButton, Group, Select, Stack, Table, Text, TextInput } from '@mantine/core';
+import { Alert, Badge, Button, Group, Select, Stack, Text, TextInput } from '@mantine/core';
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
+
+import { ResultList } from '../../components/ResultList';
 
 import { buildOutputs, listTimeZones, localTimeZone, parseTimestamp } from './timestamp';
 
@@ -60,25 +62,7 @@ export function TimestampTool(): ReactElement {
       {result?.detected && (
         <>
           <Badge variant="light" size="lg" style={{ alignSelf: 'flex-start', textTransform: 'none' }}>{result.detected}</Badge>
-          <Table withTableBorder>
-            <Table.Tbody>
-              {rows.map(row => (
-                <Table.Tr key={row.label}>
-                  <Table.Th scope="row" w={200}>{row.label}</Table.Th>
-                  <Table.Td style={{ fontFamily: 'var(--mantine-font-family-monospace)', wordBreak: 'break-all' }}>{row.value}</Table.Td>
-                  <Table.Td w={90}>
-                    <CopyButton value={row.value}>
-                      {({ copied, copy }) => (
-                        <Button size="compact-sm" variant="subtle" onClick={copy} aria-label={`Copy ${row.label}`}>
-                          {copied ? 'Copied' : 'Copy'}
-                        </Button>
-                      )}
-                    </CopyButton>
-                  </Table.Td>
-                </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
+          <ResultList rows={rows} />
         </>
       )}
     </Stack>

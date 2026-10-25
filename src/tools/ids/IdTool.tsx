@@ -1,7 +1,8 @@
-import { Alert, Button, CopyButton, Group, NumberInput, Select, Stack, Switch, Table, Tabs, Text, Textarea, TextInput } from '@mantine/core';
+import { Alert, Button, CopyButton, Group, NumberInput, Select, Stack, Switch, Tabs, Text, Textarea, TextInput } from '@mantine/core';
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactElement } from 'react';
 
+import { ResultList } from '../../components/ResultList';
 import { formatIso, formatRelative } from '../timestamp/timestamp';
 
 import { createUlidGenerator, createUuidV7Generator, parseId, uuidV4 } from './ids';
@@ -140,23 +141,7 @@ function Inspect(): ReactElement {
       />
       {result?.error && <Alert color="red" title="Can't read that">{result.error}</Alert>}
       {details && (
-        <Table withTableBorder>
-          <Table.Tbody>
-            {rows.map(row => (
-              <Table.Tr key={row.label}>
-                <Table.Th scope="row" w={190}>{row.label}</Table.Th>
-                <Table.Td style={{ fontFamily: 'var(--mantine-font-family-monospace)', wordBreak: 'break-all' }}>{row.value}</Table.Td>
-                <Table.Td w={90}>
-                  <CopyButton value={row.value}>
-                    {({ copied, copy }) => (
-                      <Button size="compact-sm" variant="subtle" onClick={copy} aria-label={`Copy ${row.label}`}>{copied ? 'Copied' : 'Copy'}</Button>
-                    )}
-                  </CopyButton>
-                </Table.Td>
-              </Table.Tr>
-            ))}
-          </Table.Tbody>
-        </Table>
+        <ResultList rows={rows} />
       )}
     </Stack>
   );
