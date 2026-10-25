@@ -16,6 +16,12 @@ function load(importer: () => Promise<Record<string, ComponentType>>, name: stri
 // Register new tools here; the home page and router are generated from this list.
 export const tools: Tool[] = [
   {
+    path: 'jwt',
+    title: 'JWT decoder',
+    description: 'Decode a JWT, check its expiry and verify its signature',
+    component: load(() => import('./tools/jwt/JwtTool'), 'JwtTool'),
+  },
+  {
     path: 'timestamp',
     title: 'Timestamp converter',
     description: 'Convert between Unix epoch, ISO 8601 and human-readable dates in any timezone',
